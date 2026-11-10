@@ -1,0 +1,6 @@
+{
+  "appId": "com.toonmakerstudio.app",
+  "appName": "TOONMAKER STUDIO",
+  "webDir": "www",
+  "android": { "allowMixedContent": false }
+}

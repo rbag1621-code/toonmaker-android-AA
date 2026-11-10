@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TOONMAKER STUDIO</title>
+<style>
+:root{--bg:#f4f1fb;--card:#fff;--ink:#241b3a;--mute:#6b6486;--pri:#6c4bd8;--line:#ddd6f0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17132a;--card:#241e3d;--ink:#f1edff;--mute:#a79fc7;--pri:#8d72f0;--line:#3a3160}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,"Noto Sans Bengali","Nirmala UI",sans-serif}
+main{max-width:480px;margin:0 auto;padding:12px}
+h1{font-size:20px;text-align:center;margin:4px 0 10px}
+h2{font-size:14px;color:var(--mute);margin:0 0 8px;text-transform:uppercase;letter-spacing:.05em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:12px}
+canvas{display:block;width:100%;height:auto;border-radius:14px;background:#000}
+.grid{display:grid;gap:8px}.g5{grid-template-columns:repeat(5,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1fr 1fr}
+button,select,textarea{font:inherit;color:var(--ink)}
+button{min-height:52px;border-radius:14px;border:2px solid var(--line);background:var(--card);padding:6px 4px;cursor:pointer;font-weight:600;font-size:14px}
+button.on{background:var(--pri);border-color:var(--pri);color:#fff}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.big{min-height:60px;font-size:18px;background:var(--pri);border-color:var(--pri);color:#fff}
+button.red{background:#d83b3b;border-color:#d83b3b;color:#fff}
+.bgb{font-size:12px;min-height:58px}
+textarea,select{width:100%;border:2px solid var(--line);border-radius:14px;background:var(--bg);padding:10px;font-size:17px}
+textarea{min-height:90px;resize:vertical;margin-bottom:8px}
+select{font-size:15px;margin-bottom:8px}
+#st{font-size:14px;color:var(--mute);min-height:20px;margin-top:8px}
+video{width:100%;border-radius:14px;margin-top:8px}
+a.dl{display:block;text-align:center;text-decoration:none;margin-top:8px;padding:16px;border-radius:14px;background:#1f9d55;color:#fff;font-weight:700}
+.rec{display:none;color:#d83b3b;font-weight:700;text-align:center;margin-bottom:6px}
+#vsPanel{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;align-items:flex-end;justify-content:center}
+#vsPanel.open{display:flex}
+.sheet{background:var(--card);width:100%;max-width:480px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet label{display:flex;justify-content:space-between;font-weight:700;margin:10px 0 6px}
+.sheet input[type=range]{width:100%;height:40px;accent-color:var(--pri)}
+.sheet .grid{margin-bottom:4px}
+.lb{display:flex;justify-content:space-between;font-weight:700;margin:10px 0 2px}
+.rng{width:100%;height:40px;accent-color:var(--pri)}
+</style></head>
+<body><main>
+<h1>🎬 TOONMAKER STUDIO</h1>
+
+<div class="card"><div class="rec" id="recBadge">● Recording video…</div>
+<canvas id="c" width="400" height="520"></canvas></div>
+
+<div class="card"><h2>Action</h2><div class="grid g5" id="acts"></div></div>
+<div class="card"><h2>Background</h2><div class="grid g5" id="bgs"></div></div>
+
+<div class="card"><h2>Eyes</h2>
+<div class="grid g3"><button id="eBlink">😑<br>Blink</button><button id="eWL">😉<br>Wink left</button><button id="eWR">😉<br>Wink right</button></div>
+<div class="grid g2" style="margin-top:8px"><button id="eAuto">Auto blink: ON</button><button id="eReset">↺ Reset eyes</button></div>
+<div class="lb">Left eye open <b id="slV"></b></div><input class="rng" type="range" id="sl" min="0" max="100" value="100">
+<div class="lb">Right eye open <b id="srV"></b></div><input class="rng" type="range" id="sr" min="0" max="100" value="100">
+<h2 style="margin-top:12px">Eye expression</h2><div class="grid g5" id="eEx"></div>
+<h2 style="margin-top:12px">Eye shape</h2><div class="grid" id="eSh" style="grid-template-columns:repeat(4,1fr)"></div>
+<div class="lb">Eye size <b id="eszV"></b></div><input class="rng" type="range" id="esz" min="70" max="140" value="100">
+<div class="lb">Distance between eyes <b id="egapV"></b></div><input class="rng" type="range" id="egap" min="-6" max="8" value="0">
+<div class="lb">Eye height on face <b id="eyV"></b></div><input class="rng" type="range" id="ey" min="-8" max="8" value="0">
+</div>
+<div class="card"><h2>Dialogue</h2>
+<textarea id="txt" placeholder="Type Bengali or English…">হ্যালো! আমি তোমার কার্টুন বন্ধু। আজ তুমি কেমন আছো?</textarea>
+<button id="vsBtn" style="width:100%;margin-bottom:8px">⚙ Voice Settings</button>
+<h2>Sound source</h2>
+<div class="grid g3" id="srcs"></div>
+<div class="grid g2" style="margin-top:8px">
+<button id="recBtn">🎙 Record voice</button>
+<button id="upBtn">📁 Upload audio</button></div>
+<input type="file" id="file" accept="audio/*" hidden>
+<div class="grid g3" style="margin-top:8px"><button class="big" id="play" style="font-size:15px">▶ Play</button><button class="big" id="pauseB" style="font-size:15px" disabled>⏸ Pause</button><button class="big red" id="stopB" style="font-size:15px" disabled>⏹ Stop</button></div>
+</div>
+
+<div class="card"><h2>Video</h2>
+<div class="grid g2"><select id="vq"><option value="360">360p – Low Quality</option><option value="480" selected>480p – Standard Quality</option><option value="720">720p – HD Quality</option><option value="1080">1080p – Full HD Quality</option></select><select id="vf"><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></div>
+<input id="vname" type="text" value="my-animation" maxlength="60" aria-label="Video file name" style="width:100%;border:2px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);padding:10px;font:inherit;font-size:15px;margin-bottom:8px">
+<div class="grid g2"><button class="big" id="vStart">⏺ Start</button><button class="big red" id="vStop" disabled>⏹ Stop</button></div>
+<p style="font-size:13px;color:var(--mute);margin:8px 0 0">Press Start, then Play, then Stop to save. Browsers can’t record the typed-text voice into the video file; use Record or Upload to get sound in the video.</p>
+<button class="big" id="dlBtn" disabled style="width:100%;margin-top:8px;background:#1f9d55;border-color:#1f9d55">⬇ Download Video</button>
+<div id="out"></div></div>
+<div id="vsPanel" role="dialog" aria-label="Voice settings"><div class="sheet">
+<h2>⚙ Voice Settings</h2>
+<label>Language</label><div class="grid g3" id="vLang"></div>
+<label>Voice type</label><div class="grid g3" id="vGen"></div>
+<p style="font-size:12px;color:var(--mute);margin:4px 0">Male/Female uses a matching voice if your phone has one; otherwise the pitch is adjusted.</p>
+<label>Choose a voice</label><select id="voice"><option value="auto">Voice: Auto (by text language)</option></select>
+<label>Speed <b id="rateV"></b></label><input type="range" id="rate" min=".5" max="2" step=".05">
+<label>Pitch <b id="pitchV"></b></label><input type="range" id="pitch" min=".5" max="2" step=".05">
+<label>Volume <b id="volV"></b></label><input type="range" id="vol" min="0" max="1" step=".05">
+<p style="font-size:12px;color:var(--mute);margin:4px 0">Volume also applies to your recording/upload. Speed and pitch apply to the AI voice. Settings are saved automatically.</p>
+<div class="grid g2" style="margin-top:8px"><button class="big" id="vPrev">🔊 Preview</button><button class="big" id="vDone" style="background:#1f9d55;border-color:#1f9d55">✔ Done</button></div>
+</div></div>
+<div id="st"></div>
+</main>
+<script>
+const $=id=>document.getElementById(id), cv=$('c'), x=cv.getContext('2d');
+const ACTS=[['sit','🪑','Sit'],['talk','💬','Talk'],['write','✍️','Write'],['drink','☕','Drink'],['think','🤔','Think'],['look','👀','Look'],['smile','😊','Smile'],['sad','😢','Sad'],['angry','😠','Angry'],['sick','🤒','Tired']];
+const BGS=['🏠 Home','🏢 Office','☕ Café','🏫 Class','🌙 Night'];
+const S={action:'sit',bg:0,speaking:false,usingAudio:false,t:0,at:0,src:'text'};
+let recUrl=null,upUrl=null;
+const status=m=>$('st').textContent=m;
+
+/* ---------- UI ---------- */
+function mk(parent,items,cls,fn){parent.innerHTML='';items.forEach((it,i)=>{const b=document.createElement('button');b.className=cls;b.innerHTML=it.html;b.onclick=()=>fn(i,b);parent.appendChild(b);it.el=b})}
+const actItems=ACTS.map(a=>({html:a[1]+'<br>'+a[2]}));
+mk($('acts'),actItems,'',i=>{S.action=ACTS[i][0];S.at=0;mark()});
+const bgItems=BGS.map(b=>({html:b.replace(' ','<br>')}));
+mk($('bgs'),bgItems,'bgb',i=>{S.bg=i;mark()});
+const srcIds=['text','rec','up'],srcItems=[{html:'🤖 AI voice'},{html:'🎙 My recording'},{html:'📁 Uploaded'}];
+mk($('srcs'),srcItems,'',i=>{if(!srcItems[i].el.disabled)setSrc(srcIds[i])});
+function mark(){ACTS.forEach((a,i)=>actItems[i].el.classList.toggle('on',a[0]===S.action));bgItems.forEach((b,i)=>b.el.classList.toggle('on',i===S.bg));srcIds.forEach((s,i)=>{srcItems[i].el.classList.toggle('on',S.src===s);if(s==='rec')srcItems[i].el.disabled=!recUrl;if(s==='up')srcItems[i].el.disabled=!upUrl})}
+function setSrc(s){S.src=s;mark()}
+mark();
+
+/* ---------- Voice settings (saved) ---------- */
+const VS=Object.assign({gender:'auto',lang:'auto',voice:'auto',rate:1,pitch:1,vol:1},(()=>{try{return JSON.parse(localStorage.getItem('tcs.vs')||'{}')}catch(e){return{}}})());
+const saveVS=()=>{try{localStorage.setItem('tcs.vs',JSON.stringify(VS))}catch(e){}};
+let pitchAdj=1;
+function pickVoice(txt){
+ const bn=/[\u0980-\u09FF]/.test(txt),L=VS.lang==='auto'?(bn?'bn':'en'):VS.lang,vs=speechSynthesis.getVoices();pitchAdj=1;
+ if(VS.voice!=='auto'){const f=vs.find(q=>q.voiceURI===VS.voice);if(f)return f}
+ const pool=vs.filter(q=>q.lang.toLowerCase().startsWith(L)),G={female:/female|woman|zira|samantha|karen|moira|tessa|victoria|susan|hazel|heera|kalpana|nabanita|aria|jenny|sara|emma/i,male:/\bmale\b|david|mark|alex|daniel|george|ravi|james|guy|ryan|bashkar|pradeep/i};
+ if(VS.gender!=='auto'){const g=pool.find(q=>G[VS.gender].test(q.name)&&!(VS.gender==='male'&&/female/i.test(q.name)));if(g)return g;pitchAdj=VS.gender==='male'?.7:1.2}
+ return pool[0]||null}
+
+/* ---------- Voices ---------- */
+function loadVoices(){if(!('speechSynthesis' in window))return;const sel=$('voice'),cur=sel.value;sel.length=1;speechSynthesis.getVoices().filter(v=>VS.lang==='auto'||v.lang.toLowerCase().startsWith(VS.lang)).sort((a,b)=>(/^bn/i.test(b.lang)-/^bn/i.test(a.lang))||a.lang.localeCompare(b.lang)).forEach(v=>{const o=document.createElement('option');o.value=v.voiceURI;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o)});sel.value=[...sel.options].some(o=>o.value===VS.voice)?VS.voice:'auto'}
+loadVoices();if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=loadVoices;
+
+/* ---------- Voice settings panel ---------- */
+const LG=['auto','bn','en'],GN=['auto','female','male'],lgI=[{html:'🌐 Auto'},{html:'বাংলা'},{html:'English'}],gnI=[{html:'🎲 Any'},{html:'👩 Female'},{html:'👨 Male'}];
+function markV(){LG.forEach((v,i)=>lgI[i].el.classList.toggle('on',VS.lang===v));GN.forEach((v,i)=>gnI[i].el.classList.toggle('on',VS.gender===v))}
+mk($('vLang'),lgI,'',i=>{VS.lang=LG[i];VS.voice='auto';saveVS();loadVoices();markV()});
+mk($('vGen'),gnI,'',i=>{VS.gender=GN[i];VS.voice='auto';saveVS();loadVoices();markV()});
+markV();
+$('voice').onchange=()=>{VS.voice=$('voice').value;saveVS()};
+['rate','pitch','vol'].forEach(k=>{const e=$(k),show=()=>{$(k+'V').textContent=k==='vol'?Math.round(VS.vol*100)+'%':(+VS[k]).toFixed(2)+'×'};e.value=VS[k];e.oninput=()=>{VS[k]=+e.value;au.volume=VS.vol;show();saveVS()};show()});
+$('vsBtn').onclick=()=>{loadVoices();$('vsPanel').classList.add('open')};
+const closeVS=()=>$('vsPanel').classList.remove('open');
+$('vDone').onclick=closeVS;$('vsPanel').onclick=e=>{if(e.target===$('vsPanel'))closeVS()};
+$('vPrev').onclick=()=>{stopSpeak();const o=S.src;S.src='text';S.pv=(VS.lang==='bn'||(VS.lang==='auto'&&/[\u0980-\u09FF]/.test($('txt').value)))?'নমস্কার! এটি আমার কণ্ঠস্বর।':'Hello! This is how my voice sounds.';$('play').click();S.pv=null;S.src=o};
+
+/* ---------- Audio (recorded / uploaded) ---------- */
+const au=new Audio();let ac,an,dest,abuf=new Uint8Array(512);
+function setupAudio(){if(ac){ac.resume();return}ac=new (window.AudioContext||window.webkitAudioContext)();const s=ac.createMediaElementSource(au);an=ac.createAnalyser();an.fftSize=512;dest=ac.createMediaStreamDestination();s.connect(an);an.connect(ac.destination);an.connect(dest);ac.resume()}
+au.onended=()=>{S.speaking=false};
+function stopSpeak(){if('speechSynthesis' in window)speechSynthesis.cancel();au.pause();S.speaking=false;S.paused=false;$('play').textContent='▶ Play'}
+function pauseSpeak(){if(S.usingAudio)au.pause();else if('speechSynthesis' in window)speechSynthesis.pause();S.paused=true;S.speaking=false}
+function resumeSpeak(){if(S.usingAudio)au.play();else if('speechSynthesis' in window)speechSynthesis.resume();S.paused=false;S.speaking=true}
+$('pauseB').onclick=()=>{if(S.speaking)pauseSpeak()};$('stopB').onclick=stopSpeak;
+$('play').onclick=()=>{
+ if(S.paused){resumeSpeak();return}
+ if(S.speaking)return;
+ if(S.src==='text'){
+  const txt=(S.pv||$('txt').value).trim();
+  if(!txt){status('Please type some text first.');return}
+  if(!('speechSynthesis' in window)){status('This browser has no voice. Use Record or Upload instead.');return}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(txt),bn=/[\u0980-\u09FF]/.test(txt),sel=$('voice').value,vs=speechSynthesis.getVoices();
+  let v=pickVoice(txt);
+  if(v){u.voice=v;u.lang=v.lang}else u.lang=bn?'bn-BD':'en-US';
+  if(bn&&!(v&&/^bn/i.test(v.lang)))status('No Bengali voice found on this device. Install one in your phone’s text-to-speech settings, or use Record/Upload.');else status('Speaking…');
+  u.rate=VS.rate;u.pitch=Math.min(2,Math.max(0,VS.pitch*pitchAdj));u.volume=VS.vol;u.onend=u.onerror=()=>{S.speaking=false};
+  S.usingAudio=false;S.speaking=true;speechSynthesis.speak(u);
+ }else{
+  setupAudio();au.src=S.src==='rec'?recUrl:upUrl;au.currentTime=0;au.volume=VS.vol;S.usingAudio=true;S.speaking=true;status('Playing audio…');
+  au.play().catch(()=>{S.speaking=false;status('Could not play this audio.')});
+ }
+};
+setInterval(()=>{$('play').textContent=S.paused?'▶ Resume':'▶ Play';$('pauseB').disabled=!S.speaking;$('stopB').disabled=!(S.speaking||S.paused)},150);
+
+/* record voice */
+let mr;
+$('recBtn').onclick=async()=>{
+ if(mr&&mr.state==='recording'){mr.stop();return}
+ if(!navigator.mediaDevices||!window.MediaRecorder){status('Voice recording is not supported here.');return}
+ try{
+  const st=await navigator.mediaDevices.getUserMedia({audio:true}),ch=[];
+  mr=new MediaRecorder(st);
+  mr.ondataavailable=e=>ch.push(e.data);
+  mr.onstop=()=>{st.getTracks().forEach(t=>t.stop());if(recUrl)URL.revokeObjectURL(recUrl);recUrl=URL.createObjectURL(new Blob(ch,{type:mr.mimeType}));$('recBtn').textContent='🎙 Record voice';setSrc('rec');status('Recording saved. Press Play.')};
+  mr.start();$('recBtn').textContent='⏹ Stop recording';status('Recording… speak now.');
+ }catch(e){status('Microphone permission was denied or unavailable.')}
+};
+/* upload */
+$('upBtn').onclick=()=>$('file').click();
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;if(upUrl)URL.revokeObjectURL(upUrl);upUrl=URL.createObjectURL(f);setSrc('up');status('Loaded: '+f.name+'. Press Play.')};
+
+/* ---------- Video export ---------- */
+let vr,vch=[];
+$('vStart').onclick=()=>{
+ if(!window.MediaRecorder||!cv.captureStream){status('Video recording is not supported in this browser.');return}
+ setupAudio();
+ const H0=+$('vq').value,fps=+$('vf').value;setRes(H0);
+ const st=cv.captureStream(fps);dest.stream.getAudioTracks().forEach(t=>st.addTrack(t));
+ const mime=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
+ const bps=({360:1.2e6,480:2.5e6,720:5e6,1080:9e6})[H0]*(fps===60?1.6:fps===24?.85:1);
+ vch=[];const mo={videoBitsPerSecond:Math.round(bps)};if(mime)mo.mimeType=mime;vr=new MediaRecorder(st,mo);
+ vr.ondataavailable=e=>{if(e.data.size)vch.push(e.data)};
+ vr.onstop=()=>{
+  setRes(520);const type=vr.mimeType||'video/webm',ext=type.includes('mp4')?'mp4':'webm',blob=new Blob(vch,{type}),url=URL.createObjectURL(blob);
+  vBlob=blob;vExt=ext;$('out').innerHTML='<video controls playsinline src="'+url+'"></video>';$('dlBtn').disabled=false;$('dlBtn').textContent='⬇ Download Video ('+ext.toUpperCase()+')';
+  status('✅ Video ready ('+ext.toUpperCase()+', '+H0+'p, '+fps+' FPS). Tap Download Video.'+(ext==='mp4'?'':' This browser can’t make MP4, so it is WebM; most phones and apps can play it.'));
+ };
+ vr.start();$('vStart').disabled=true;$('vStop').disabled=false;$('recBadge').style.display='block';$('out').innerHTML='';status('Recording video… press Play, then Stop.');
+};
+$('vStop').onclick=()=>{if(vr&&vr.state==='recording')vr.stop();$('vStart').disabled=false;$('vStop').disabled=true;$('recBadge').style.display='none'};
+
+/* download + resolution */
+let vBlob,vExt,SC=1;
+function setRes(h){cv.height=h;cv.width=Math.round(400*h/520/2)*2;SC=h/520}
+$('dlBtn').onclick=async()=>{
+ if(!vBlob){status('Record a video first: Start, Play, Stop.');return}
+ const nm=($('vname').value.trim().replace(/[\\\/:*?"<>|]+/g,'')||'my-animation')+'.'+vExt;
+ const CP=window.Capacitor;
+ if(CP&&CP.isNativePlatform&&CP.isNativePlatform()){
+  try{
+   const b64=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(vBlob)});
+   const FS=CP.Plugins.Filesystem;let where='Documents/ToonMaker/'+nm;
+   try{await FS.writeFile({path:'ToonMaker/'+nm,data:b64,directory:'DOCUMENTS',recursive:true})}
+   catch(e){const r=await FS.writeFile({path:nm,data:b64,directory:'CACHE'});where='your chosen location (via Share sheet)';await CP.Plugins.Share.share({title:nm,url:r.uri,dialogTitle:'Save video'})}
+   status('✅ Video saved: '+where)
+  }catch(e){status('Could not save the video: '+((e&&e.message)||e))}
+  return}
+ try{const d=window.claude?await claude.use('downloads'):null;
+  if(d){await d.save({filename:nm,data:vBlob});status('✅ Saved: '+nm);return}
+ }catch(e){if(e&&e.code==='declined'){status('Download cancelled.');return}}
+ const a=document.createElement('a');a.href=URL.createObjectURL(vBlob);a.download=nm;document.body.appendChild(a);a.click();a.remove();
+ status('✅ Download ready: '+nm+'. Check your Downloads folder.');
+};
+
+/* ---------- Eyes ---------- */
+/* l,r = current openness (smoothed 0..1); sl,sr = slider targets */
+const E={l:1,r:1,sl:1,sr:1,expr:'auto',shape:'round',size:1,gap:0,y:0,auto:true,nb:2.5,bt:-1,wl:0,wr:0};
+function updEyes(dt){
+ const t=S.t;let bf=1;
+ if(E.auto&&E.bt<0&&t>E.nb)E.bt=0;
+ if(E.bt>=0){E.bt+=dt;const u=E.bt/.2;if(u>=1){E.bt=-1;E.nb=t+2.2+Math.random()*3.5;if(Math.random()<.2)E.nb=t+.25}else bf=1-Math.sin(Math.PI*u)}
+ E.wl=Math.max(0,E.wl-dt);E.wr=Math.max(0,E.wr-dt);
+ const k=Math.min(1,dt*(bf<1?30:14));
+ E.l+=(E.sl*bf*(E.wl>0?0:1)-E.l)*k;E.r+=(E.sr*bf*(E.wr>0?0:1)-E.r)*k;
+}
+const EXI=[['auto','🎭<br>Auto'],['happy','😊<br>Happy'],['sad','😢<br>Sad'],['angry','😠<br>Angry'],['surprised','😮<br>Surprised']].map(a=>({html:a[1],v:a[0]}));
+const SHI=[['round','Round'],['tall','Tall'],['wide','Wide'],['big','Big']].map(a=>({html:a[1],v:a[0]}));
+function markE(){EXI.forEach(i=>i.el.classList.toggle('on',E.expr===i.v));SHI.forEach(i=>i.el.classList.toggle('on',E.shape===i.v));$('eAuto').textContent='Auto blink: '+(E.auto?'ON':'OFF');$('eAuto').classList.toggle('on',E.auto)}
+mk($('eEx'),EXI,'bgb',i=>{E.expr=EXI[i].v;markE()});
+mk($('eSh'),SHI,'',i=>{E.shape=SHI[i].v;markE()});
+const sld=(id,fn,lab)=>{const e=$(id),v=$(id+'V'),u=()=>{fn(+e.value);v.textContent=lab(+e.value)};e.oninput=u;u()},sg=v=>(v>0?'+':'')+v;
+sld('sl',v=>E.sl=v/100,v=>v+'%');sld('sr',v=>E.sr=v/100,v=>v+'%');sld('esz',v=>E.size=v/100,v=>v+'%');sld('egap',v=>E.gap=v,sg);sld('ey',v=>E.y=v,sg);
+$('eBlink').onclick=()=>{E.bt=0};
+$('eWL').onclick=()=>{E.wl=.7};$('eWR').onclick=()=>{E.wr=.7};
+$('eAuto').onclick=()=>{E.auto=!E.auto;E.nb=S.t+1;markE()};
+$('eReset').onclick=()=>{Object.assign(E,{expr:'auto',shape:'round',auto:true});[['sl',100],['sr',100],['esz',100],['egap',0],['ey',0]].forEach(([id,v])=>{$(id).value=v;$(id).oninput()});markE()};
+markE();
+
+/* ---------- Drawing ---------- */
+const f=(c,a,b,w,h)=>{x.fillStyle=c;x.fillRect(a,b,w,h)};
+const rr=(a,b,w,h,r,c,s)=>{x.beginPath();x.roundRect(a,b,w,h,r);if(c){x.fillStyle=c;x.fill()}if(s){x.strokeStyle=s;x.lineWidth=5;x.stroke()}};
+const circ=(a,b,r,c)=>{x.beginPath();x.arc(a,b,r,0,7);x.fillStyle=c;x.fill()};
+const ell=(a,b,rx,ry,c)=>{x.beginPath();x.ellipse(a,b,Math.max(.1,rx),Math.max(.1,ry),0,0,7);x.fillStyle=c;x.fill()};
+const BN='"Noto Sans Bengali","Nirmala UI",system-ui,sans-serif';
+function clock(a,b,r){circ(a,b,r,'#fff');x.strokeStyle='#333';x.lineWidth=3;x.stroke();x.beginPath();x.moveTo(a,b);x.lineTo(a,b-r*.6);x.moveTo(a,b);x.lineTo(a+r*.5,b+r*.2);x.stroke()}
+function glow(a,b,r,c){const g=x.createRadialGradient(a,b,5,a,b,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(255,200,100,0)');x.fillStyle=g;x.fillRect(0,0,400,520)}
+function drawBg(i){
+ if(i===0){f('#f3d9b8',0,0,400,520);rr(40,60,110,120,8,'#9fd4f5','#fff');f('#fff',93,60,5,120);f('#fff',40,117,110,5);rr(250,70,90,70,4,'#e58b6d','#7a4a2e');circ(295,105,16,'#f7d774');f('#b98a5e',0,430,400,90);ell(200,470,170,26,'#c0584f')}
+ if(i===1){f('#dfe6ee',0,0,400,520);rr(240,60,130,130,6,'#bfe3ff','#fff');for(let k=0;k<9;k++)f('rgba(255,255,255,.7)',240,68+k*14,130,5);rr(25,70,95,150,4,'#8d6e63');['#e57373','#64b5f6','#81c784','#ffd54f','#ba68c8','#4db6ac'].forEach((c,k)=>{f(c,34+k*14,80,11,50);f(c,34+k*14,150,11,55)});f('#5d4037',25,138,95,6);clock(180,75,24);f('#8a8f98',0,430,400,90)}
+ if(i===2){f('#8a5a3b',0,0,400,520);[90,310].forEach(a=>{f('#222',a,0,3,70);glow(a,90,120,'rgba(255,210,120,.5)');x.beginPath();x.arc(a+1,95,24,Math.PI,0);x.fillStyle='#f6c453';x.fill()});rr(150,120,100,70,4,'#2b2b2b','#d9b38c');x.fillStyle='#fff';x.font='700 22px '+BN;x.textAlign='center';x.fillText('COFFEE',200,162);f('#5b3a26',20,215,110,8);f('#5b3a26',270,215,110,8);[35,65,95,285,320,350].forEach(a=>{rr(a,190,22,25,4,'#f5efe6')});f('#5b3a26',0,430,400,90)}
+ if(i===3){f('#e7e2b8',0,0,400,520);rr(35,50,330,170,6,'#2f5d4a','#9b6b3f');x.fillStyle='rgba(255,255,255,.85)';x.font='700 34px '+BN;x.textAlign='center';x.fillText('ক খ গ  A B C  ১ ২ ৩',200,145);clock(200,28,18);f('#c9a679',0,430,400,90)}
+ if(i===4){f('#1b2142',0,0,400,520);rr(40,60,120,130,8,'#0c1230','#3a4377');circ(110,110,18,'#fff4c2');circ(118,106,16,'#0c1230');[[60,80],[80,150],[135,75],[145,160],[70,120]].forEach(p=>circ(p[0],p[1],2,'#fff'));glow(330,190,230,'rgba(255,190,90,.4)');f('#6b5a3a',327,215,6,120);x.beginPath();x.moveTo(305,215);x.lineTo(355,215);x.lineTo(342,170);x.lineTo(318,170);x.fillStyle='#f6c453';x.fill();f('#2a2340',0,430,400,90)}
+}
+const ease=u=>u*u*(3-2*u),lerp=(a,b,u)=>a+(b-a)*u;
+const P={x:170,y:392},C={x:272,y:392},L={x:0,y:0},H={x:0,y:0,r:0};let mouthV=0,dp=0;
+
+function arm(sx,sy,hx,hy,side,sleeve,skin,pose,pa){
+ const Lh=78;let dx=hx-sx,dy=hy-sy,d=Math.hypot(dx,dy),m=Lh*2-2;
+ if(d>m){hx=sx+dx/d*m;hy=sy+dy/d*m;dx=hx-sx;dy=hy-sy;d=m}
+ const h=Math.sqrt(Lh*Lh-(d/2)**2);let px=-dy/d,py=dx/d;
+ if(py*.5+px*side<0){px=-px;py=-py}
+ const ex=sx+dx/2+px*h,ey=sy+dy/2+py*h;
+ x.lineCap='round';x.lineJoin='round';
+ x.strokeStyle=sleeve;x.lineWidth=28;x.beginPath();x.moveTo(sx,sy);x.lineTo(ex,ey);x.stroke();
+ x.strokeStyle=skin;x.lineWidth=20;x.beginPath();x.moveTo(ex,ey);x.lineTo(hx,hy);x.stroke();
+ hand(hx,hy,Math.atan2(hy-ey,hx-ex),side,skin,pose,pa);
+}
+/* One hand design for every animation: palm + 4 fingers + thumb. pose: open | rest | pen | cup */
+function hand(hx,hy,ang,side,skin,pose,pa){
+ const ol='#b9825c',FL=[17,19,17,13],T=S.t,cu=[...{open:[.05,0,.05,.1],rest:[.3,.35,.4,.45],pen:[.5,.95,1,1],cup:[.85,.95,1,1]}[pose]],sp=pose==='open'?1.35:1,tap=Math.pow(.5+.5*Math.sin(T*.8),2),tw=pose==='open'?Math.sin(T*5)*3:0;
+ for(let i=0;i<4;i++){if(pose==='open')cu[i]+=.2+.2*Math.sin(T*7+i*1.3);if(pose==='rest')cu[i]=Math.max(0,cu[i]-.15)+Math.max(0,Math.sin(T*7-i*.9))*.4*tap;if(pose==='pen'&&i>0)cu[i]-=.04*(1+Math.sin(T*3+i))}
+ const fy=i=>side*(11.25-7.5*i);
+ const seg=(p,w)=>{x.lineCap=x.lineJoin='round';x.beginPath();x.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length;i++)x.lineTo(p[i][0],p[i][1]);x.strokeStyle=ol;x.lineWidth=w+2.6;x.stroke();x.strokeStyle=skin;x.lineWidth=w;x.stroke()};
+ const ik=(bx,by,tx,ty,L,w,bs)=>{let dx=tx-bx,dy=ty-by,d=Math.hypot(dx,dy)||1;if(d>L-.5){dx*=(L-.5)/d;dy*=(L-.5)/d;d=L-.5}const h=Math.sqrt(Math.max(0,L*L/4-d*d/4));seg([[bx,by],[bx+dx/2-dy/d*h*bs,by+dy/2+dx/d*h*bs],[bx+dx,by+dy]],w)};
+ x.save();x.translate(hx,hy);x.rotate(ang);
+ const skip=pose==='pen'?0:-1;
+ for(let i=3;i>=0;i--){if(i===skip)continue;const len=FL[i]*(1-.45*cu[i]),tx=9+len,ty=fy(i)*(1+(sp-1)*(1-cu[i]));seg([[9,fy(i)],[tx,ty]],6);if(cu[i]<.6)circ(tx-1.5,ty,1.8,'#f9e0cc')}
+ x.beginPath();x.roundRect(-9,-15,22,30,9);x.fillStyle=skin;x.fill();
+ if(pose==='pen'){
+  const r=pa-ang,c=Math.cos(r),s=Math.sin(r),pf=(u,v)=>[u*c-v*s,u*s+v*c];
+  x.save();x.rotate(r);x.lineCap='round';x.strokeStyle='#d83b3b';x.lineWidth=6;x.beginPath();x.moveTo(0,-26);x.lineTo(0,14);x.stroke();x.strokeStyle='#222';x.lineWidth=4;x.beginPath();x.moveTo(0,14);x.lineTo(0,19);x.stroke();x.restore();
+  const a1=pf(2,-1),a2=pf(-2,5);
+  ik(9,fy(0),a1[0],a1[1],16,6,side);
+  ik(2,side*11,a2[0],a2[1],16,7,-side);
+ }else seg({open:[[2,side*11],[8,side*18+tw/2],[15,side*23+tw]],rest:[[2,side*11],[9,side*16],[16,side*19]],cup:[[2,side*11],[10,side*12],[16,side*7]]}[pose],7);
+ x.restore();
+}
+function cup(cx,by){
+ rr(cx-17,by-30,34,30,6,'#fff','#c9bfb5');x.lineWidth=5;x.strokeStyle='#fff';x.beginPath();x.arc(cx+19,by-16,8,-1.4,1.4);x.stroke();
+ f('#5b3a26',cx-14,by-28,28,6);
+ if(dp<.3){x.strokeStyle='rgba(255,255,255,.6)';x.lineWidth=2;for(let i=0;i<2;i++){x.beginPath();x.moveTo(cx-6+i*12,by-36);x.quadraticCurveTo(cx-10+i*12+Math.sin(S.t*3+i)*4,by-46,cx-6+i*12,by-56);x.stroke()}}
+}
+
+function frame(ms){
+ const dt=Math.min(.05,(ms-(frame.l||ms))/1000);frame.l=ms;S.t+=dt;S.at+=dt;
+ const t=S.t,a=S.action;
+ const talkNow=S.speaking||a==='talk',gest=talkNow&&!['write','drink','think'].includes(a);
+ let tp={x:172+Math.sin(t*1.3)*8,y:398},tc={x:272,y:400},tl={x:0,y:0},th={x:0,y:0,r:0};dp=0;
+ if(gest){tp={x:150+Math.sin(t*3)*16,y:345+Math.sin(t*4.1)*24};tc={x:258+Math.sin(t*2.6+1)*14,y:352+Math.cos(t*3.3)*18};th.r=Math.sin(t*2.2)*.05;th.y=Math.sin(t*6)*2}
+ if(a==='write'){tp={x:205+Math.sin(t*6)*16,y:402+Math.abs(Math.sin(t*12))*2};tc={x:268,y:402};th.r=.12;th.y=8;tl={x:0,y:1}}
+ if(a==='drink'){const ph=S.at%5.5;dp=ph<1.2?ease(ph/1.2):ph<3.2?1:ph<4.4?1-ease((ph-3.2)/1.2):0;tc={x:lerp(272,226,dp),y:lerp(400,250,dp)};th.r=-.08*dp}
+ if(a==='think'){tc={x:226,y:272};th.r=-.1;th.x=-4;tl={x:.8,y:-1}}
+ if(a==='look'){const s=Math.sin(t*1.3);tl={x:s,y:0};th.x=s*12;th.r=s*.06}
+ if(a==='sad'){th.y=10;th.r=.05;tl={x:0,y:1}}
+ if(a==='sick'){th.y=9;th.r=.1+Math.sin(t)*.05;tl={x:0,y:1}}
+ const k=Math.min(1,dt*10);
+ P.x+=(tp.x-P.x)*k;P.y+=(tp.y-P.y)*k;C.x+=(tc.x-C.x)*(a==='drink'?1:k);C.y+=(tc.y-C.y)*(a==='drink'?1:k);
+ L.x+=(tl.x-L.x)*k;L.y+=(tl.y-L.y)*k;H.x+=(th.x-H.x)*k;H.y+=(th.y-H.y)*k;H.r+=(th.r-H.r)*k;
+ let mt=0;
+ if(talkNow&&a!=='drink'){
+  if(S.speaking&&S.usingAudio&&an){an.getByteTimeDomainData(abuf);let s=0;for(const v of abuf)s+=((v-128)/128)**2;mt=Math.min(1,Math.sqrt(s/abuf.length)*6)}
+  else mt=Math.min(1,Math.max(0,.55+Math.sin(t*13)*.35+Math.sin(t*5.1)*.25))*(Math.sin(t*2.3)>-.8?1:.2);
+ }
+ mouthV+=(mt-mouthV)*Math.min(1,dt*18);
+
+ updEyes(dt);draw(a);requestAnimationFrame(frame);
+}
+
+function draw(a){
+ const t=S.t,bob=Math.sin(t*2)*1.5,mood={sad:'sad',angry:'angry',smile:'smile',sick:'sick'}[a]||'neutral';
+ const skin=mood==='sick'?'#cfd9a8':mood==='angry'?'#f2a58a':'#f5c9a0';
+ x.setTransform(SC,0,0,SC,0,0);x.clearRect(0,0,400,520);drawBg(S.bg);
+ // chair
+ rr(122,245,156,210,18,'#8b5a3c');rr(122,245,156,22,12,'#6f452b');
+ // body
+ x.save();x.translate(0,bob);
+ rr(138,288,124,150,34,'#3b7dd8');f('#2f67b5',190,300,20,140);
+ f(skin,188,252,24,44);
+ x.beginPath();x.moveTo(184,290);x.lineTo(200,312);x.lineTo(216,290);x.fillStyle='#fff';x.fill();
+ // head
+ x.save();x.translate(200+H.x,205+H.y);x.rotate(H.r);
+ circ(0,-8,63,'#2b2118');
+ ell(-58,4,9,13,skin);ell(58,4,9,13,skin);
+ ell(0,0,56,62,skin);
+ // fringe
+ x.beginPath();x.moveTo(-58,-8);x.bezierCurveTo(-62,-76,62,-76,58,-8);x.bezierCurveTo(40,-40,10,-30,-10,-38);x.bezierCurveTo(-30,-30,-48,-22,-58,-8);x.fillStyle='#2b2118';x.fill();
+ // cheeks
+ if(mood==='smile'||mood==='neutral')ell(-34,18,9,5,'rgba(240,120,120,.35)'),ell(34,18,9,5,'rgba(240,120,120,.35)');
+ // eyes
+ const SHP={round:[12,13],tall:[10,16],wide:[14,10],big:[14,15]}[E.shape],xp=E.expr,au_=xp==='auto',fx=au_?(mood==='sick'?.55:mood==='angry'?.8:1):1,sz=E.size*(xp==='surprised'?1.2:1);
+ [[-1,E.l],[1,E.r]].forEach(([sg,op])=>{
+  const cx=sg*(22+E.gap),cy=-2+E.y,rx=SHP[0]*sz,ry=SHP[1]*sz*fx*(xp==='happy'?.85:1)*op;
+  if(op<.1){x.strokeStyle='#2b2118';x.lineWidth=3.2;x.lineCap='round';x.beginPath();if(xp==='happy'){x.moveTo(cx-rx,cy+2);x.quadraticCurveTo(cx,cy-12,cx+rx,cy+2)}else{x.moveTo(cx-rx,cy);x.quadraticCurveTo(cx,cy+5,cx+rx,cy)}x.stroke();return}
+  ell(cx,cy,rx,ry,'#fff');
+  const pr=5.5*sz*(xp==='surprised'?.65:xp==='happy'?1.1:1),mx=Math.max(0,rx-pr-1),my=Math.max(0,ry-pr-1),px=cx+Math.max(-mx,Math.min(mx,L.x*4)),py=cy+Math.max(-my,Math.min(my,L.y*4));
+  circ(px,py,pr,'#2a1d14');circ(px+2,py-2,Math.max(1,pr*.33),'#fff');
+  if(!au_&&xp!=='surprised'){x.save();x.beginPath();x.ellipse(cx,cy,rx+.5,ry+.5,0,0,7);x.clip();x.fillStyle=skin;x.strokeStyle='#2b2118';x.lineWidth=2.5;
+   const d=-sg,xo=cx-d*(rx+3),xi=cx+d*(rx+3),top=cy-ry-4;
+   if(xp==='happy'){x.beginPath();x.ellipse(cx,cy+ry*1.1,rx*1.4,ry*.75,0,0,7);x.fill()}
+   else{const yo=xp==='angry'?cy-ry*.55:cy,yi=xp==='angry'?cy+ry*.05:cy-ry*.7;x.beginPath();x.moveTo(xo,yo);x.lineTo(xi,yi);x.lineTo(xi,top);x.lineTo(xo,top);x.closePath();x.fill();x.beginPath();x.moveTo(xo,yo);x.lineTo(xi,yi);x.stroke()}
+   x.restore()}
+ });
+ 
+ if(mood==='sick'&&E.expr==='auto'&&!E.gap&&!E.y){f(skin,-36,-16,26,8);f(skin,10,-16,26,8);x.strokeStyle='#6a6a50';x.lineWidth=2.5;x.beginPath();x.moveTo(-34,-8);x.lineTo(-10,-8);x.moveTo(10,-8);x.lineTo(34,-8);x.stroke()}
+ // brows
+ x.strokeStyle='#2b2118';x.lineWidth=4.5;x.lineCap='round';x.beginPath();
+ let bl=[-34,-26,-12,-26],br=[12,-26,34,-26];
+ if(mood==='angry'){bl=[-34,-32,-10,-20];br=[10,-20,34,-32]}
+ if(mood==='sad'||mood==='sick'){bl=[-34,-20,-10,-30];br=[10,-30,34,-20]}
+ if(mood==='smile'){bl=[-34,-30,-12,-32];br=[12,-32,34,-30]}
+ {const B={happy:[-34,-30,-12,-32,12,-32,34,-30],sad:[-34,-20,-10,-30,10,-30,34,-20],angry:[-34,-32,-10,-20,10,-20,34,-32],surprised:[-34,-38,-12,-40,12,-40,34,-38]}[E.expr];if(B){bl=B.slice(0,4);br=B.slice(4)}bl=[bl[0]-E.gap,bl[1]+E.y,bl[2]-E.gap,bl[3]+E.y];br=[br[0]+E.gap,br[1]+E.y,br[2]+E.gap,br[3]+E.y]}
+ x.moveTo(bl[0],bl[1]);x.lineTo(bl[2],bl[3]);x.moveTo(br[0],br[1]);x.lineTo(br[2],br[3]);x.stroke();
+ // nose
+ x.strokeStyle='rgba(150,90,60,.6)';x.lineWidth=2.5;x.beginPath();x.arc(0,13,5,.3,2.8);x.stroke();
+ // mouth
+ if(mouthV>.08&&a!=='drink'){ell(0,33,12+mouthV*3,3+mouthV*13,'#7a2230');if(mouthV>.4)ell(0,33+mouthV*8,7,3.5,'#e8707f')}
+ else{x.strokeStyle='#7a2230';x.lineWidth=3.5;x.beginPath();
+  const m={smile:[-17,28,0,46,17,28],sad:[-12,38,0,27,12,38],angry:[-12,36,0,31,12,36],sick:[-12,35,0,31,12,35],neutral:[-13,32,0,38,13,32]}[mood];
+  x.moveTo(m[0],m[1]);x.quadraticCurveTo(m[2],m[3],m[4],m[5]);x.stroke()}
+ x.restore();
+ // mood extras
+ const hx=200+H.x,hy=205+H.y;
+ if(mood==='angry')for(let i=0;i<3;i++){const u=((t*.8+i/3)%1);x.globalAlpha=1-u;circ(hx-40+i*40,hy-72-u*40,8+u*6,'#fff');x.globalAlpha=1}
+ if(mood==='sad'){const u=(t*.7)%1;x.globalAlpha=1-u*.6;ell(hx-26,hy+8+u*40,4,6,'#5bb8ff');x.globalAlpha=1}
+ if(mood==='sick'){ell(hx+52,hy-30,5,8,'#7cc8ff');x.fillStyle='#fff';x.font='700 22px '+BN;x.textAlign='left';x.globalAlpha=.5+.5*Math.sin(t*2);x.fillText('z Z z',hx+40,hy-72-((t*8)%12));x.globalAlpha=1}
+ if(a==='think'){circ(hx+62,hy-60,5,'#fff');circ(hx+78,hy-82,8,'#fff');ell(hx+105,hy-122,36,24,'#fff');x.fillStyle='#6c4bd8';x.font='700 28px '+BN;x.textAlign='center';x.fillText('?',hx+105,hy-112)}
+ x.restore();
+ // table
+ f('#b98355',0,378,400,64);f('#cfa070',0,378,400,4);x.fillStyle='rgba(90,55,25,.12)';for(let i=0;i<5;i++)x.fillRect(0,392+i*11,400,2);f('#a06a40',0,442,400,16);f('#8a5c38',0,458,400,62);
+ // notebook
+ if(a==='write'){rr(165,396,96,34,3,'#fffdf4','#bbb');x.strokeStyle='rgba(74,111,216,.55)';x.lineWidth=1.5;x.beginPath();for(let i=0;i<4;i++){x.moveTo(173,405+i*6);x.lineTo(252,405+i*6)}x.stroke()}
+ // cup
+ const restX=312,restY=416,cupX=lerp(restX,C.x-2,dp),cupY=lerp(restY,C.y+12,dp);cup(cupX,cupY);
+ // arms
+ x.save();x.translate(0,bob);
+ const gest=S.speaking||a==='talk';
+ arm(242,312,C.x,C.y,1,'#3b7dd8',skin,dp>.05?'cup':(gest&&!['write','think'].includes(a)?'open':'rest'));
+ arm(158,312,P.x,P.y,-1,'#3b7dd8',skin,'pen',a==='write'?-.9:-.5+Math.sin(t*2)*.12);
+ x.restore();
+}
+requestAnimationFrame(frame);
+/* ---------- Android back button ---------- */
+(()=>{const CP=window.Capacitor,A=CP&&CP.Plugins&&CP.Plugins.App;if(!A)return;let last=0;
+A.addListener('backButton',()=>{
+ if($('vsPanel').classList.contains('open')){closeVS();return}
+ const now=Date.now(),twice=now-last<2000;last=now;
+ if(vr&&vr.state==='recording'&&!twice){status('Video is recording. Press Stop first, or press Back again to exit.');return}
+ if(S.speaking||S.paused){stopSpeak();last=0;return}
+ if(twice){A.exitApp();return}
+ status('Press Back again to exit.')})})();
+</script></body></html>
